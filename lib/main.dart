@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Login App',
       home: LoginScreen(),
@@ -32,11 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
     String username = _usernameController.text;
     String password = _passwordController.text;
 
-    // Validar los datos
     if (username == "admin" && password == "1234") {
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,18 +98,145 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const HomeScreen(),
+    const ProfileScreen(),
+    const SettingsScreen(),
+  ];
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            label: 'Objetos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.watch_later),
+            label: 'Horario',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TabBarObjects extends StatelessWidget {
+  const TabBarObjects({super.key});
+
+  final List<String> objetos = const [
+    "Estuche",
+    "Termo",
+    "Mochila",
+    "Suéter azul",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false, // 🔥 Quitar el logo de debug
+      home: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: "Mis Objetos"),
+                Tab(text: "Recolección"),
+              ],
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              _buildListaObjetos(), // Lista de objetos
+              const Icon(Icons.recycling), // Pestaña de recolección
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListaObjetos() {
+    return ListView.builder(
+      itemCount: objetos.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(objetos[index]),
+          trailing: const Icon(Icons.qr_code),
+          onTap: () {
+            // Aquí puedes manejar la acción al tocar el objeto
+          },
+        );
+      },
+    );
+  }
+}
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bienvenido'),
-      ),
+      appBar: AppBar(title: const Text('Objetos')),
+      body: const Center(child: TabBarObjects()),
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Perfil')),
       body: const Center(
         child: Text(
-          '¡Has iniciado sesión correctamente!',
+          'Esta es tu pantalla de perfil.',
+          style: TextStyle(fontSize: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Configuración')),
+      body: const Center(
+        child: Text(
+          'Aquí puedes ajustar la configuración.',
           style: TextStyle(fontSize: 20),
         ),
       ),
