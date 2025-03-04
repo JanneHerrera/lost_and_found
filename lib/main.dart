@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -158,31 +159,28 @@ class TabBarObjects extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false, // 🔥 Quitar el logo de debug
-      home: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: "Mis Objetos"),
-                Tab(text: "Recolección"),
-              ],
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              _buildListaObjetos(), // Lista de objetos
-              const Icon(Icons.recycling), // Pestaña de recolección
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "Mis Objetos"),
+              Tab(text: "Recolección"),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildListaObjetos(context), // Lista de objetos con QR
+            const Icon(Icons.recycling), // Pestaña de recolección
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildListaObjetos() {
+  Widget _buildListaObjetos(BuildContext context) {
     return ListView.builder(
       itemCount: objetos.length,
       itemBuilder: (context, index) {
@@ -190,8 +188,44 @@ class TabBarObjects extends StatelessWidget {
           title: Text(objetos[index]),
           trailing: const Icon(Icons.qr_code),
           onTap: () {
-            // Aquí puedes manejar la acción al tocar el objeto
+            _mostrarQR(context, objetos[index]);
           },
+        );
+      },
+    );
+  }
+
+  void _mostrarQR(BuildContext context, String objeto) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Código QR de $objeto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // 🔥 Esto evita problemas de tamaño
+            children: [
+              SizedBox(
+                width: 200, // 🔥 Asegura que tenga un tamaño definido
+                height: 200,
+                child: QrImageView(
+                  data: "QR de $objeto",
+                  version: QrVersions.auto,
+                  size: 200.0,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Escanea este código para más información.",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cerrar"),
+            ),
+          ],
         );
       },
     );
@@ -205,7 +239,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Objetos')),
-      body: const Center(child: TabBarObjects()),
+      body: const TabBarObjects(),
     );
   }
 }
