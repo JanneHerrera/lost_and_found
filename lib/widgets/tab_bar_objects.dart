@@ -11,13 +11,13 @@ class TabBarObjects extends StatefulWidget {
 }
 
 class _TabBarObjectsState extends State<TabBarObjects> {
-  List<String> objetos = []; // 🔥 Lista vacía para almacenar los Pokémon
-  bool isLoading = true; // 🔥 Estado para saber si la carga sigue en proceso
+  List<String> objetos = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchPokemon(); // 🔥 Llamamos a la función al iniciar el widget
+    _fetchPokemon();
   }
 
   Future<void> _fetchPokemon() async {
@@ -31,8 +31,8 @@ class _TabBarObjectsState extends State<TabBarObjects> {
             (data['results'] as List).map((p) => p['name'].toString()).toList();
 
         setState(() {
-          objetos = nombresPokemon; // 🔥 Guardamos los nombres obtenidos
-          isLoading = false; // 🔥 Marcamos como cargado
+          objetos = nombresPokemon;
+          isLoading = false;
         });
       } else {
         throw Exception("Error al obtener datos");
@@ -51,17 +51,25 @@ class _TabBarObjectsState extends State<TabBarObjects> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          backgroundColor: const Color(0xFF5F98E4),
+          title: const Text("Objetos", style: TextStyle(color: Colors.white)),
           bottom: const TabBar(
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             tabs: [
               Tab(text: "Mis Objetos"),
               Tab(text: "Recolección"),
             ],
           ),
         ),
+        backgroundColor: const Color(0xFFF2F6FC),
         body: TabBarView(
           children: [
             _buildListaObjetos(context),
-            const Icon(Icons.recycling),
+            const Center(
+              child: Icon(Icons.recycling, size: 100, color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -70,19 +78,29 @@ class _TabBarObjectsState extends State<TabBarObjects> {
 
   Widget _buildListaObjetos(BuildContext context) {
     if (isLoading) {
-      return const Center(
-          child: CircularProgressIndicator()); // 🔄 Mostramos carga
+      return const Center(child: CircularProgressIndicator());
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.all(10),
       itemCount: objetos.length,
       itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(objetos[index]),
-          trailing: const Icon(Icons.qr_code),
-          onTap: () {
-            _mostrarQR(context, objetos[index]);
-          },
+        return Card(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 3,
+          child: ListTile(
+            title: Text(
+              objetos[index],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: const Icon(Icons.qr_code, color: Colors.blue),
+            onTap: () {
+              _mostrarQR(context, objetos[index]);
+            },
+          ),
         );
       },
     );
@@ -94,24 +112,24 @@ class _TabBarObjectsState extends State<TabBarObjects> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Código QR de $objeto'),
-          content: SizedBox(
-            width: 200,
-            height: 250,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                QrImageView(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 200, // Tamaño fijo para el ancho del QR
+                height: 200, // Tamaño fijo para la altura del QR
+                child: QrImageView(
                   data: "QR de $objeto",
                   version: QrVersions.auto,
-                  size: 200.0,
+                  size: 200.0, // Tamaño del QR
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Escanea este código para más información.",
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10), // Espaciado entre el QR y el texto
+              const Text(
+                "Escanea este código para más información.",
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
           actions: [
             TextButton(
