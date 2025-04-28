@@ -11,14 +11,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController emailController = TextEditingController();
 
   // Datos simulados del estudiante
-  final String studentName = "Juan Pérez";
-  final String studentID = "A01234567";
+  final String studentName = "Janne Herrera";
+  final String studentID = "18310146";
   final String grade = "8° Semestre";
 
   @override
   void initState() {
     super.initState();
-    emailController.text = "juan.perez@example.com"; // Valor inicial del email
+    emailController.text = "a18310146@live.ceti.com"; // Valor inicial del email
   }
 
   @override
