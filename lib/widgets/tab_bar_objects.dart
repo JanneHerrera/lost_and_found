@@ -17,21 +17,23 @@ class _TabBarObjectsState extends State<TabBarObjects> {
   @override
   void initState() {
     super.initState();
-    _fetchPokemon();
+    _fetchObjetos(); // Renombrado
   }
 
-  Future<void> _fetchPokemon() async {
-    const url = "https://pokeapi.co/api/v2/pokemon?limit=10&offset=0";
+  Future<void> _fetchObjetos() async {
+    const url = "http://191.101.14.196:8080/v1/qrs"; // Nueva URL
 
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final List<String> nombresPokemon =
-            (data['results'] as List).map((p) => p['name'].toString()).toList();
+
+        final List<String> qrValues = (data['content'] as List)
+            .map((item) => item['qrValue'].toString())
+            .toList();
 
         setState(() {
-          objetos = nombresPokemon;
+          objetos = qrValues;
           isLoading = false;
         });
       } else {
@@ -106,25 +108,25 @@ class _TabBarObjectsState extends State<TabBarObjects> {
     );
   }
 
-  void _mostrarQR(BuildContext context, String objeto) {
+  void _mostrarQR(BuildContext context, String qrValue) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Código QR de $objeto'),
+          title: const Text('Código QR'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 200, // Tamaño fijo para el ancho del QR
-                height: 200, // Tamaño fijo para la altura del QR
+                width: 200,
+                height: 200,
                 child: QrImageView(
-                  data: "QR de $objeto",
+                  data: qrValue, // Ahora se usa el valor real del backend
                   version: QrVersions.auto,
-                  size: 200.0, // Tamaño del QR
+                  size: 200.0,
                 ),
               ),
-              const SizedBox(height: 10), // Espaciado entre el QR y el texto
+              const SizedBox(height: 10),
               const Text(
                 "Escanea este código para más información.",
                 textAlign: TextAlign.center,
