@@ -6,9 +6,21 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F6FC),
-      body: const TabBarObjects(),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F6FC),
+        appBar: AppBar(
+          title: const Text('Objetos'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Mis Objetos'),
+              Tab(text: 'Objetos Recogidos'),
+            ],
+          ),
+        ),
+        body: TabBarObjects(),
+      ),
     );
   }
 }

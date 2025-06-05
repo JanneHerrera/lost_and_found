@@ -1,12 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:lost_and_found/screens/login_screen.dart';
-import 'dart:convert';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class TabBarObjects extends StatefulWidget {
-  const TabBarObjects({super.key});
-
   @override
   _TabBarObjectsState createState() => _TabBarObjectsState();
 }
@@ -15,182 +10,105 @@ class _TabBarObjectsState extends State<TabBarObjects> {
   List<Map<String, String>> misObjetos = [];
   List<Map<String, String>> recoleccionObjetos = [];
   bool isLoading = true;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _fetchObjetos();
+    _fetchObjetos(); // Primera carga
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _fetchObjetos(); // Se repite cada minuto
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancelar al salir del widget
+    super.dispose();
   }
 
   Future<void> _fetchObjetos() async {
-    final email =
-        await storage.read(key: "userEmail"); // ← aquí esperamos el valor
-    final token = await storage.read(key: 'jwt_token');
+    setState(() {
+      isLoading = true;
+    });
 
-    if (email == null) {
-      print("No se encontró el userEmail en storage");
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
-
-    final uri = Uri(
-      scheme: 'http',
-      host: '191.101.14.196',
-      port: 8080,
-      path: '/v1/lost-objects/users/',
-      queryParameters: {
-        'userEmail': email,
-      },
-    );
-    print("llamado a $uri");
     try {
-      final response = await http.get(
-        uri,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      // Simulación de la lógica para obtener los datos
+      final nuevosMisObjetos = [
+        {'nombre': 'Mochila', 'categoria': 'Escolar'},
+        {'nombre': 'Suéter azul', 'categoria': 'Ropa'}
+      ];
+      final nuevosRecoleccionObjetos = [
+        {'nombre': 'Termo', 'categoria': 'Accesorio'}
+      ];
 
-        final List<Map<String, String>> mis = [];
-        final List<Map<String, String>> recolectados = [];
+      // Aquí podrías comparar si hay cambios antes de hacer setState
+      final sonIguales = _listasIguales(misObjetos, nuevosMisObjetos) &&
+          _listasIguales(recoleccionObjetos, nuevosRecoleccionObjetos);
 
-        for (var item in data['content']) {
-          final objeto = {
-            'name': item['name'].toString(),
-            'description': item['description'].toString(),
-            'qrValue': item['qrValue'].toString(),
-          };
-          if (item['status'] == true) {
-            recolectados.add(objeto);
-          } else {
-            mis.add(objeto);
-          }
-        }
-
+      if (!sonIguales) {
         setState(() {
-          misObjetos = mis;
-          recoleccionObjetos = recolectados;
-          isLoading = false;
+          misObjetos = nuevosMisObjetos;
+          recoleccionObjetos = nuevosRecoleccionObjetos;
         });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        print("llamado a $uri");
-        print("Código de respuesta: ${response.statusCode}");
-        print("Cuerpo recibido: ${response.body}");
-        throw Exception("Error al obtener datos");
       }
     } catch (e) {
-      print("Error: $e");
+      print('Error al obtener los objetos: $e');
+    } finally {
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  // Comparación simple de listas de mapas
+  bool _listasIguales(
+      List<Map<String, String>> a, List<Map<String, String>> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].toString() != b[i].toString()) return false;
+    }
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF5F98E4),
-          title: const Text("Objetos", style: TextStyle(color: Colors.white)),
-          bottom: const TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [
-              Tab(text: "Mis Objetos"),
-              Tab(text: "Recolección"),
-            ],
-          ),
-        ),
-        backgroundColor: const Color(0xFFF2F6FC),
-        body: TabBarView(
-          children: [
-            _buildListaObjetos(context, misObjetos),
-            _buildListaObjetos(context, recoleccionObjetos),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListaObjetos(
-      BuildContext context, List<Map<String, String>> lista) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (lista.isEmpty) {
-      return const Center(child: Text("No hay objetos para mostrar."));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(10),
-      itemCount: lista.length,
-      itemBuilder: (context, index) {
-        final item = lista[index];
-        return Card(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return Column(
+      children: [
+        const TabBar(
+          tabs: [
+            Tab(text: 'Mis Objetos'),
+            Tab(text: 'Objetos Recogidos'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            children: [
+              _buildLista(misObjetos),
+              _buildLista(recoleccionObjetos),
+            ],
           ),
-          elevation: 3,
-          child: ListTile(
-            title: Text(
-              item['name'] ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            subtitle: Text(
-              item['description'] ?? '',
-              style: const TextStyle(fontSize: 14),
-            ),
-            trailing: const Icon(Icons.qr_code, color: Colors.blue),
-            onTap: () {
-              _mostrarQR(context, item['qrValue'] ?? '');
-            },
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 
-  void _mostrarQR(BuildContext context, String qrValue) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Código QR'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: QrImageView(
-                  data: qrValue,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Escanea este código para más información.",
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cerrar"),
-            ),
-          ],
+  Widget _buildLista(List<Map<String, String>> objetos) {
+    if (objetos.isEmpty) {
+      return const Center(child: Text('No hay objetos para mostrar'));
+    }
+
+    return ListView.builder(
+      itemCount: objetos.length,
+      itemBuilder: (context, index) {
+        final objeto = objetos[index];
+        return ListTile(
+          title: Text(objeto['nombre'] ?? ''),
+          subtitle: Text(objeto['categoria'] ?? ''),
         );
       },
     );
